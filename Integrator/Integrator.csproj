@@ -119,6 +119,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <DependentUpon>Database2.mdf</DependentUpon>
     </Content>
+    <Content Include="T-SQL\Delete_From.sql" />
     <Content Include="T-SQL\Insert_database1.sql" />
   </ItemGroup>
   <ItemGroup>
