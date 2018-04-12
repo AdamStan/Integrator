@@ -121,6 +121,7 @@
     </Content>
     <Content Include="T-SQL\Delete_From.sql" />
     <Content Include="T-SQL\Insert_database1.sql" />
+    <Content Include="T-SQL\Insert_database2.sql" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">

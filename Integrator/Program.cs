@@ -11,16 +11,16 @@ namespace Integrator
         /// <summary>
         /// Główny punkt wejścia dla aplikacji.
         /// </summary>
+        public static Integrator integrator;
         [STAThread]
         static void Main()
         {
-            
-            Integrator i =
-                new Integrator("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=D:\\" +
-                    "Projekty\\C#\\Integrator\\Integrator\\Database1.mdf;Integrated Security=True", 
-                    "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=D:\\Projekty\\C#\\" +
-                    "Integrator\\Integrator\\Database2.mdf;Integrated Security=True");
-            i.Integrate();
+
+            integrator = new Integrator("Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=D:\\" +
+                "Projekty\\C#\\Integrator\\Integrator\\Database1.mdf;Integrated Security=True", 
+                "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=D:\\Projekty\\C#\\" +
+                "Integrator\\Integrator\\Database2.mdf;Integrated Security=True");
+            integrator.Integrate();
             
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
