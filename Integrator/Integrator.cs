@@ -20,6 +20,25 @@ namespace Integrator
             con1 = new SqlConnection(url1);
             con2 = new SqlConnection(url2);
         }
+        //it shows rows which our data has
+        private void ShowData()
+        {
+            foreach (DataTable table in data.Tables)
+            {
+                Console.WriteLine(table.TableName);
+                DataRowCollection wiersze = table.Rows;
+                DataColumnCollection columny = table.Columns;
+                foreach (DataRow row in wiersze)
+                {
+                    StringBuilder buff = new StringBuilder();
+                    foreach (DataColumn col in columny)
+                    {
+                        buff.Append(row[col] + " | ");
+                    }
+                    Console.WriteLine(buff.ToString());
+                }
+            }
+        }
 
         public void Integrate()
         {
@@ -42,7 +61,10 @@ namespace Integrator
             DataSet data1 = new DataSet();
             DataSet data2 = new DataSet();
 
-            for(int i = 0; i < namesOfTables.Count; i++)
+            //wyciągnięcie wszystkich tabelek i wsadzenie do secików (to powinna być metoda)
+            //jesli chcemy to robic dla roznych baz (w sensie, ze nie muszą mieć takich
+            //samych tabel) to trzeba rzucać i łapać wyjątki, na razie mi się nie chce
+            for (int i = 0; i < namesOfTables.Count; i++)
             {
                 String command = "Select * from " + namesOfTables[i];
                 SqlDataAdapter adp1 = new SqlDataAdapter(command, con1);
@@ -51,36 +73,36 @@ namespace Integrator
                 DataTable dt2 = new DataTable();
                 adp1.Fill(dt1);
                 adp2.Fill(dt2);
+                dt1.TableName = namesOfTables[i];
+                dt2.TableName = namesOfTables[i];
                 data1.Tables.Add(dt1);
                 data2.Tables.Add(dt2);
             }
 
-            
+            data = new DataSet();
+            //pierwsze przejście, 
             foreach(DataTable table in data1.Tables)
             {
-                DataRowCollection wiersze = table.Rows;
-                DataColumnCollection columny = table.Columns;
-                foreach (DataRow row in wiersze)
+                data.Tables.Add(table.Copy());
+            }
+            
+            //drugi to już właściwa integracja, na razie jest prostacka
+            foreach (DataTable table2 in data2.Tables)
+            {
+                foreach(DataTable tab in data.Tables)
                 {
-                    foreach (DataColumn col in columny)
+                    if (table2.TableName.Equals(tab.TableName))
                     {
-                        Console.Write(row[col] + ", ");
+                        foreach(DataRow row in table2.Rows)
+                        {
+                            tab.Rows.Add(row.ItemArray);
+                        }
                     }
-                    Console.WriteLine(";");
                 }
             }
 
-            Console.WriteLine();
-            data = new DataSet();
-
-            data.Merge(data1);
-            data.Merge(data2); //nie dodaje bo te same kolumny primary key
-
-
-            //SqlCommand 
-            //SqlDataAdapter  
-            //dateset'y i jakoś to integrować
-
+            this.ShowData();
+            
             con1.Close();
             con2.Close();
         }
