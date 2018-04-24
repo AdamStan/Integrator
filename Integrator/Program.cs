@@ -20,8 +20,7 @@ namespace Integrator
                 "Projekty\\C#\\Integrator\\Integrator\\Database1.mdf;Integrated Security=True", 
                 "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=D:\\Projekty\\C#\\" +
                 "Integrator\\Integrator\\Database2.mdf;Integrated Security=True");
-            integrator.Integrate();
-            
+            //integrator.Integrate();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());

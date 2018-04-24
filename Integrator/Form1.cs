@@ -19,14 +19,26 @@ namespace Integrator
 
         private void Integruj(object sender, EventArgs e)
         {
-            
-            /*DataTable dtAll = Program.integrator.data.Tables[0].Copy();
-            for (var i = 1; i < Program.integrator.data.Tables.Count; i++)
-            {
-                dtAll.Merge(Program.integrator.data.Tables[i]);
-            }
-            dataGridView1.AutoGenerateColumns = true;
-            dataGridView1.DataSource = dtAll;*/
+            Program.integrator.Integrate();
+            //generowanie raporciku
+            // + pokazanie jakies w apce
+        }
+
+        private void GetConnection(object sender, EventArgs e)
+        {
+            button1.Enabled = false;
+            button2.Enabled = true;
+        }
+
+        private void GetDisconnect(object sender, EventArgs e)
+        {
+            button1.Enabled = true;
+            button2.Enabled = false;
+        }
+
+        private void Quit(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

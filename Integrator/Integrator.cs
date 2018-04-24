@@ -13,7 +13,6 @@ namespace Integrator
     {
         private SqlConnection con1 { get; set; }
         private SqlConnection con2 { get; set; }
-        public DataSet data;
 
         public Integrator(String url1, String url2)
         {
@@ -39,13 +38,36 @@ namespace Integrator
                 }
                 try
                 {
-                    Console.Write(table.PrimaryKey[0].ColumnName);
+                    Console.WriteLine(table.PrimaryKey[0].ColumnName);
                 }
                 catch(IndexOutOfRangeException e)
                 {
                     Console.WriteLine("W tabeli nie ma kluczy głównych ");
                 }
                 
+            }
+        }
+        private void AddPrimaryKeysToDataSet(DataRowCollection wiersze, ref DataSet dane)
+        {
+            DataColumn[] keys = null;
+            foreach (DataRow row in wiersze)
+            {
+                foreach (DataTable tab in dane.Tables)
+                {
+                    if (tab.TableName.Equals(row["table_name"]))
+                    {
+                        foreach (DataColumn col in tab.Columns)
+                        {
+                            if (col.ColumnName.Equals(row["column_name"]))
+                            {
+                                DataColumn[] buff = new DataColumn[1];
+                                buff[0] = col;
+                                tab.PrimaryKey = buff;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -69,7 +91,6 @@ namespace Integrator
             //bierzemy klucze:
             DataTable dt = con1.GetSchema("IndexColumns");
             DataRowCollection wiersze = dt.Rows;
-            DataColumnCollection columny = dt.Columns;
             foreach (DataRow row in wiersze)
             {
                 StringBuilder buff = new StringBuilder();
@@ -81,18 +102,13 @@ namespace Integrator
                 buff.Append(row["constraint_name"] + " | ");
                 Console.WriteLine(buff.ToString());
             }
-
             //bierzemy klucze obce:
             //na razie darujemy sobie to
-
-
+            
             DataSet data1 = new DataSet();
             DataSet data2 = new DataSet();
 
-            //wyciągnięcie wszystkich tabelek i wsadzenie do secików (to powinna być metoda)
-            //jesli chcemy to robic dla roznych baz (w sensie, ze nie muszą mieć takich
-            //samych tabel) to trzeba rzucać i łapać wyjątki, na razie mi się nie chce
-            //nie działa dobrze, nie zczytuje kluczy i constraintów
+            //dobrze działa, spokojnie
             for (int i = 0; i < namesOfTables.Count; i++)
             {
                 //bierzemy dane:
@@ -102,34 +118,72 @@ namespace Integrator
                 adp1.Fill(data1, namesOfTables[i]);
                 adp2.Fill(data2, namesOfTables[i]);
             }
+            //dopisanie kluczy do kolumn
+            AddPrimaryKeysToDataSet(wiersze, ref data1);
+            AddPrimaryKeysToDataSet(wiersze, ref data2);
+            /*DropPrimaryKeysFromDataSet(data1);
+            DropPrimaryKeysFromDataSet(data2);*/
             this.ShowData(data1);
 
-            data = new DataSet();
-            //pierwsze przejście, 
+            DataSet new_data1 = new DataSet();
+            DataSet new_data2 = new DataSet();
+            //pierwsze przejście
             foreach(DataTable table in data1.Tables)
             {
-                data.Tables.Add(table.Copy());
+                new_data1.Tables.Add(table.Copy());
             }
-            
+            foreach (DataTable table in data2.Tables)
+            {
+                new_data2.Tables.Add(table.Copy());
+            }
+
             //drugi to już właściwa integracja, na razie jest prostacka
             //dziala bo wczytywanie jest skopane, nie bedzie dzialac
             //jak wczytywanie bedzie dobrze
+            //już nie działa :-))
             foreach (DataTable table2 in data2.Tables)
             {
-                foreach(DataTable tab in data.Tables)
+                foreach(DataTable tab in new_data1.Tables)
                 {
                     if (table2.TableName.Equals(tab.TableName))
                     {
                         foreach(DataRow row in table2.Rows)
                         {
-                            tab.Rows.Add(row.ItemArray);
+                            try
+                            {
+                                tab.Rows.Add(row.ItemArray);
+                            }
+                            catch (System.Data.ConstraintException e)
+                            {
+
+                            }
                         }
                     }
                 }
             }
+            foreach (DataTable table in data1.Tables)
+            {
+                foreach (DataTable tab in new_data2.Tables)
+                {
+                    if (table.TableName.Equals(tab.TableName))
+                    {
+                        foreach (DataRow row in table.Rows)
+                        {
+                            try
+                            {
+                                tab.Rows.Add(row.ItemArray);
+                            }
+                            catch (System.Data.ConstraintException e)
+                            {
 
-            this.ShowData(data);
-            
+                            }
+                        }
+                    }
+                }
+            }
+            this.ShowData(new_data1);
+            this.ShowData(new_data2);
+
             con1.Close();
             con2.Close();
         }
