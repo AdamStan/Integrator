@@ -21,9 +21,9 @@ namespace Integrator
             con2 = new SqlConnection(url2);
         }
         //it shows rows which our data has
-        private void ShowData()
+        private void ShowData(DataSet dane)
         {
-            foreach (DataTable table in data.Tables)
+            foreach (DataTable table in dane.Tables)
             {
                 Console.WriteLine(table.TableName);
                 DataRowCollection wiersze = table.Rows;
@@ -37,6 +37,15 @@ namespace Integrator
                     }
                     Console.WriteLine(buff.ToString());
                 }
+                try
+                {
+                    Console.Write(table.PrimaryKey[0].ColumnName);
+                }
+                catch(IndexOutOfRangeException e)
+                {
+                    Console.WriteLine("W tabeli nie ma kluczy głównych ");
+                }
+                
             }
         }
 
@@ -57,6 +66,25 @@ namespace Integrator
                 Console.WriteLine(tablename);
                 namesOfTables.Add(tablename);
             }
+            //bierzemy klucze:
+            DataTable dt = con1.GetSchema("IndexColumns");
+            DataRowCollection wiersze = dt.Rows;
+            DataColumnCollection columny = dt.Columns;
+            foreach (DataRow row in wiersze)
+            {
+                StringBuilder buff = new StringBuilder();
+                buff.Append(row["table_name"] + " | ");
+                buff.Append(row["column_name"] + " | ");
+                buff.Append(row["ordinal_position"] + " | ");
+                buff.Append(row["KeyType"] + " | ");
+                buff.Append(row["index_name"] + " | ");
+                buff.Append(row["constraint_name"] + " | ");
+                Console.WriteLine(buff.ToString());
+            }
+
+            //bierzemy klucze obce:
+            //na razie darujemy sobie to
+
 
             DataSet data1 = new DataSet();
             DataSet data2 = new DataSet();
@@ -64,20 +92,17 @@ namespace Integrator
             //wyciągnięcie wszystkich tabelek i wsadzenie do secików (to powinna być metoda)
             //jesli chcemy to robic dla roznych baz (w sensie, ze nie muszą mieć takich
             //samych tabel) to trzeba rzucać i łapać wyjątki, na razie mi się nie chce
+            //nie działa dobrze, nie zczytuje kluczy i constraintów
             for (int i = 0; i < namesOfTables.Count; i++)
             {
+                //bierzemy dane:
                 String command = "Select * from " + namesOfTables[i];
                 SqlDataAdapter adp1 = new SqlDataAdapter(command, con1);
                 SqlDataAdapter adp2 = new SqlDataAdapter(command, con2);
-                DataTable dt1 = new DataTable();
-                DataTable dt2 = new DataTable();
-                adp1.Fill(dt1);
-                adp2.Fill(dt2);
-                dt1.TableName = namesOfTables[i];
-                dt2.TableName = namesOfTables[i];
-                data1.Tables.Add(dt1);
-                data2.Tables.Add(dt2);
+                adp1.Fill(data1, namesOfTables[i]);
+                adp2.Fill(data2, namesOfTables[i]);
             }
+            this.ShowData(data1);
 
             data = new DataSet();
             //pierwsze przejście, 
@@ -87,6 +112,8 @@ namespace Integrator
             }
             
             //drugi to już właściwa integracja, na razie jest prostacka
+            //dziala bo wczytywanie jest skopane, nie bedzie dzialac
+            //jak wczytywanie bedzie dobrze
             foreach (DataTable table2 in data2.Tables)
             {
                 foreach(DataTable tab in data.Tables)
@@ -101,7 +128,7 @@ namespace Integrator
                 }
             }
 
-            this.ShowData();
+            this.ShowData(data);
             
             con1.Close();
             con2.Close();
